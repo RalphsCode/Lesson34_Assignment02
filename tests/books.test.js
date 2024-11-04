@@ -10,7 +10,7 @@ const db = require("../db");
 
 let testBook;
 
-beforeEach(async function() {
+beforeAll(async function() {
     const result = await db.query(
         `INSERT INTO books (isbn,
         amazon_url,
@@ -40,13 +40,10 @@ beforeEach(async function() {
     )
     testBook = result.rows[0];
 });
-
-afterEach(async function() {
-    // delete any data created by test
-    await db.query("DELETE FROM books");
-  });
   
 afterAll(async function() {
+    // delete any data created by test
+    await db.query("DELETE FROM books");
     // close db connection
     await db.end();		// If this is not done the test will hang.
   });
@@ -55,11 +52,33 @@ afterAll(async function() {
 
 describe("GET /books", function() {
 
-    test("Gets a list of books", async function() {
+    test("Get list of books", async function() {
       const response = await request(app).get(`/books`);
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual({
         books: [testBook] });
     });
+
+    test("Insert a book", async function() {
+        const newBook = {
+            isbn: "9876543210",
+            amazon_url: "http://testing.com",
+            author: "RalphsCode",
+            language: "english",
+            pages: 300,
+            publisher: "Xerox",
+            title: "Test a new book",
+            year: 2024
+          };
+
+          const result = await request(app)
+          .post("/books")
+          .send(newBook);
+
+        expect(result.statusCode).toEqual(201);
+        expect(result.body).toEqual({
+          book: newBook });
+      });
+
   });
   
