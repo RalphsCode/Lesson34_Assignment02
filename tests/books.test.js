@@ -58,8 +58,10 @@ describe("GET /books", function() {
       expect(response.body).toEqual({
         books: [testBook] });
     });
+}) // END describe
 
-    test("Insert a book", async function() {
+describe("Add a book", function() {
+    test("Add a book", async function() {
         const newBook = {
             isbn: "9876543210",
             amazon_url: "http://testing.com",
@@ -80,5 +82,69 @@ describe("GET /books", function() {
           book: newBook });
       });
 
-  });
+    test("Add a book, Year in future", async function() {
+        const newBook = {
+            isbn: "9876543211",
+            amazon_url: "http://testing.com",
+            author: "RalphsCode",
+            language: "english",
+            pages: 300,
+            publisher: "Xerox",
+            title: "Test a new book",
+            year: 2028
+          };
+
+          const result = await request(app)
+          .post("/books")
+          .send(newBook);
+
+        expect(result.statusCode).toEqual(400);
+        expect(result.body.error).toBeDefined();
+        expect(result.body.error.message[0]).toContain("instance.year must be less than or equal to");
+      });
+    }) // END describe
+
+describe("Update a book", function() {
+    test("Update a book, missing field", async function() {
+        const updateBook = {
+            isbn: "9876543210",
+            amazon_url: "http://testing.com",
+            author: "RalphsCode",
+            language: "english",
+            pages: 300,
+            // publisher: "Xerox",  // Missing field
+            title: "Test a new book III",
+            year: 2022
+          };
+
+          const result = await request(app)
+          .put("/books/9876543210")
+          .send(updateBook);
+
+        expect(result.statusCode).toEqual(400);
+        expect(result.body.error).toBeDefined();
+        expect(result.body.error.message[0]).toEqual("instance requires property \"publisher\"");
+      });
+
+      test("Update a book", async function() {
+        const updateBook = {
+            isbn: "9876543210",
+            amazon_url: "http://testing.com",
+            author: "RalphsCode",
+            language: "American",
+            pages: 300,
+            publisher: "Xerox", 
+            title: "Test a new book IV",
+            year: 1969
+          };
+
+          const result = await request(app)
+          .put("/books/9876543210")
+          .send(updateBook);
+
+        expect(result.statusCode).toEqual(200);
+        expect(result.body.error).not.toBeDefined();
+        expect(result.body.book.language).toEqual("American");
+      });
+  })  // END describe
   
